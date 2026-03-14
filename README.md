@@ -44,4 +44,4 @@ PostgreSQL (v14 or higher)
    Server running on http://localhost:3000
    ```
 
-6. Finally, go to ```http://localhost:3000`` on your browser, or simply open index.html. 
+6. Finally, go to ```http://localhost:3000``` on your browser, or simply open index.html. 
