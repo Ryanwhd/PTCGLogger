@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PTCG Logger</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Nunito:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:       #0b0e17;
+      --surface:  #111827;
+      --panel:    #1a2235;
+      --border:   #2a3a55;
+      --accent:   #00c8ff;
+      --accent2:  #0066ff;
+      --gold:     #ffd700;
+      --silver:   #c0c8d8;
+      --common:   #a0b0c0;
+      --text:     #dce8f5;
+      --muted:    #607898;
+      --danger:   #ff4466;
+      --success:  #00e5a0;
+      --font-head: 'Rajdhani', sans-serif;
+      --font-mono: 'Share Tech Mono', monospace;
+      --font-body: 'Nunito', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ─── BACKGROUND GRID ─── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,200,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,200,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ─── NAV ─── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; gap: 12px;
+      padding: 0 28px;
+      height: 60px;
+      background: rgba(11,14,23,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      font-family: var(--font-head);
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-right: auto;
+    }
+    .nav-logo span { color: var(--text); }
+    .nav-btn {
+      font-family: var(--font-head);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 7px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      border: none;
+      transition: all .2s;
+    }
+    .nav-btn.ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .nav-btn.ghost:hover { color: var(--text); border-color: var(--accent); }
+    .nav-btn.primary {
+      background: var(--accent2);
+      color: #fff;
+    }
+    .nav-btn.primary:hover { background: var(--accent); }
+    .nav-btn.active-view {
+      background: rgba(0,200,255,0.1);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+    #userGreeting {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--success);
+      padding: 6px 12px;
+      background: rgba(0,229,160,0.08);
+      border-radius: 4px;
+      border: 1px solid rgba(0,229,160,0.3);
+    }
+
+    /* ─── MAIN CONTENT ─── */
+    main {
+      position: relative; z-index: 1;
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 30px 24px 60px;
+    }
+
+    /* ─── VIEWS ─── */
+    .view { display: none; animation: fadeIn .3s ease; }
+    .view.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ─── PAGE TITLE ─── */
+    .page-title {
+      font-family: var(--font-head);
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .page-title span { color: var(--accent); }
+    .page-sub {
+      font-size: 13px;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      margin-bottom: 28px;
+      letter-spacing: 1px;
+    }
+
+    /* ─── AUTH FORMS ─── */
+    .auth-wrap {
+      max-width: 420px; margin: 60px auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 36px;
+    }
+    .auth-tabs {
+      display: flex; gap: 0;
+      margin-bottom: 28px;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .auth-tab {
+      flex: 1; padding: 10px;
+      font-family: var(--font-head);
+      font-size: 14px; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase;
+      cursor: pointer; border: none;
+      background: transparent; color: var(--muted);
+      transition: all .2s;
+    }
+    .auth-tab.active { background: var(--accent2); color: #fff; }
+    .form-group { margin-bottom: 16px; }
+    label {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 11px; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: 6px;
+    }
+    input[type=text], input[type=email], input[type=password], select {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 14px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    input:focus, select:focus { border-color: var(--accent); }
+    .btn {
+      font-family: var(--font-head);
+      font-size: 14px; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase;
+      padding: 11px 24px;
+      border-radius: 5px;
+      cursor: pointer; border: none;
+      transition: all .2s;
+    }
+    .btn-full { width: 100%; }
+    .btn-primary { background: var(--accent2); color: #fff; }
+    .btn-primary:hover { background: var(--accent); color: #000; }
+    .btn-outline { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+    .btn-outline:hover { background: var(--accent); color: #000; }
+    .btn-danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+    .btn-danger:hover { background: var(--danger); color: #fff; }
+    .msg { font-size: 13px; margin-top: 12px; text-align: center; min-height: 18px; }
+    .msg.error { color: var(--danger); }
+    .msg.success { color: var(--success); }
+
+    /* ─── SETS GRID ─── */
+    .sets-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 18px;
+    }
+    .set-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 22px 24px;
+      cursor: pointer;
+      transition: all .25s;
+      position: relative;
+      overflow: hidden;
+    }
+    .set-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(0,200,255,0.04), transparent);
+      opacity: 0; transition: opacity .25s;
+    }
+    .set-card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,200,255,0.12); }
+    .set-card:hover::before { opacity: 1; }
+    .set-code {
+      font-family: var(--font-mono);
+      font-size: 11px; letter-spacing: 2px;
+      color: var(--accent); margin-bottom: 6px;
+    }
+    .set-name {
+      font-family: var(--font-head);
+      font-size: 20px; font-weight: 700;
+      letter-spacing: 1px; margin-bottom: 4px;
+    }
+    .set-meta {
+      font-size: 12px; color: var(--muted);
+      margin-top: 12px; display: flex; gap: 16px;
+    }
+    .set-gen-badge {
+      font-family: var(--font-mono);
+      font-size: 10px; letter-spacing: 1px;
+      padding: 3px 8px; border-radius: 3px;
+      background: rgba(0,102,255,0.15);
+      color: var(--accent2);
+      border: 1px solid rgba(0,102,255,0.3);
+      display: inline-block; margin-top: 8px;
+    }
+
+    /* ─── CONTROLS BAR ─── */
+    .controls-bar {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 22px; flex-wrap: wrap;
+    }
+    .search-input {
+      flex: 1; min-width: 180px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 9px 14px;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 14px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .search-input:focus { border-color: var(--accent); }
+    .sort-select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 9px 14px;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      outline: none; cursor: pointer;
+    }
+    .rarity-toggle {
+      display: flex; gap: 6px; align-items: center;
+    }
+    .rarity-pill {
+      font-family: var(--font-mono);
+      font-size: 11px; letter-spacing: 1px;
+      padding: 5px 10px; border-radius: 20px;
+      cursor: pointer; border: 1px solid var(--border);
+      background: transparent; color: var(--muted);
+      transition: all .2s;
+    }
+    .rarity-pill.active-rarity { border-color: currentColor; }
+    .rarity-pill[data-r="UR"].active-rarity { color: var(--gold); background: rgba(255,215,0,0.1); }
+    .rarity-pill[data-r="SR"].active-rarity, .rarity-pill[data-r="SAR"].active-rarity { color: var(--silver); background: rgba(192,200,216,0.1); }
+    .rarity-pill[data-r="CSR"].active-rarity { color: #ff9a3c; background: rgba(255,154,60,0.1); }
+    .rarity-pill[data-r="other"].active-rarity { color: var(--common); background: rgba(160,176,192,0.1); }
+
+    /* ─── CARDS TABLE ─── */
+    .cards-table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .cards-table-wrap table { width: 100%; border-collapse: collapse; }
+    .cards-table-wrap th {
+      background: var(--panel);
+      font-family: var(--font-mono);
+      font-size: 11px; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--muted);
+      padding: 12px 16px; text-align: left;
+    }
+    .cards-table-wrap td {
+      padding: 11px 16px;
+      border-bottom: 1px solid rgba(42,58,85,0.5);
+      font-size: 13px;
+    }
+    .cards-table-wrap tr:last-child td { border-bottom: none; }
+    .cards-table-wrap tr.card-row { cursor: pointer; transition: background .15s; }
+    .cards-table-wrap tr.card-row:hover { background: rgba(0,200,255,0.04); }
+
+    /* ─── RARITY COLORS ─── */
+    .rarity-UR    { color: var(--gold);   font-weight: 700; text-shadow: 0 0 8px rgba(255,215,0,0.4); }
+    .rarity-SR    { color: var(--silver); font-weight: 600; }
+    .rarity-SAR   { color: var(--silver); font-weight: 600; }
+    .rarity-CSR   { color: #ff9a3c; font-weight: 600; }
+    .rarity-other { color: var(--common); }
+    .rarity-badge {
+      font-family: var(--font-mono);
+      font-size: 10px; letter-spacing: 1px;
+      padding: 2px 8px; border-radius: 3px;
+    }
+    .rarity-badge.UR  { background: rgba(255,215,0,0.15); color: var(--gold); border: 1px solid rgba(255,215,0,0.3); }
+    .rarity-badge.SR  { background: rgba(192,200,216,0.1); color: var(--silver); border: 1px solid rgba(192,200,216,0.3); }
+    .rarity-badge.SAR { background: rgba(192,200,216,0.1); color: var(--silver); border: 1px solid rgba(192,200,216,0.3); }
+    .rarity-badge.CSR { background: rgba(255,154,60,0.1); color: #ff9a3c; border: 1px solid rgba(255,154,60,0.3); }
+    .rarity-badge.default { background: rgba(160,176,192,0.1); color: var(--common); border: 1px solid rgba(160,176,192,0.2); }
+
+    /* ─── CARD DETAIL ─── */
+    .card-detail {
+      max-width: 700px; margin: 0 auto;
+    }
+    .card-detail-back {
+      font-family: var(--font-mono);
+      font-size: 12px; color: var(--muted);
+      cursor: pointer; letter-spacing: 1px;
+      margin-bottom: 24px; display: inline-flex; align-items: center; gap: 6px;
+      transition: color .2s;
+    }
+    .card-detail-back:hover { color: var(--accent); }
+    .card-detail-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .card-detail-header {
+      padding: 28px 32px;
+      background: linear-gradient(135deg, var(--panel), var(--surface));
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    .card-detail-number {
+      font-family: var(--font-mono);
+      font-size: 12px; color: var(--muted);
+      letter-spacing: 2px; margin-bottom: 6px;
+    }
+    .card-detail-name {
+      font-family: var(--font-head);
+      font-size: 36px; font-weight: 700; letter-spacing: 2px;
+    }
+    .card-detail-body { padding: 28px 32px; }
+    .detail-row {
+      display: flex; align-items: center; gap: 16px;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(42,58,85,0.5);
+    }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-key {
+      font-family: var(--font-mono);
+      font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--muted); min-width: 120px;
+    }
+    .detail-val { font-size: 14px; color: var(--text); }
+    .card-art-placeholder {
+      width: 160px; height: 220px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--panel);
+      margin-right: 28px; flex-shrink: 0;
+      position: relative; overflow: hidden;
+    }
+    .card-art-placeholder::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, transparent 40%, rgba(0,200,255,0.05));
+    }
+    .card-art-inner { text-align: center; color: var(--muted); font-size: 28px; }
+    .card-detail-flex { display: flex; align-items: flex-start; }
+    .card-detail-info { flex: 1; }
+    .owned-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px;
+      padding: 5px 12px; border-radius: 4px;
+      background: rgba(0,229,160,0.1); color: var(--success);
+      border: 1px solid rgba(0,229,160,0.3);
+    }
+    .not-owned-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px;
+      padding: 5px 12px; border-radius: 4px;
+      background: rgba(255,68,102,0.08); color: var(--danger);
+      border: 1px solid rgba(255,68,102,0.3);
+    }
+    .collected-note { font-size: 12px; color: var(--muted); margin-top: 6px; }
+    .add-to-coll-btn-wrap { margin-top: 22px; }
+
+    /* ─── MY COLLECTION VIEW ─── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 14px; margin-bottom: 28px;
+    }
+    .stat-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 18px;
+    }
+    .stat-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; }
+    .stat-val { font-family: var(--font-head); font-size: 28px; font-weight: 700; color: var(--accent); }
+
+    /* ─── BACK BREADCRUMB ─── */
+    .back-crumb {
+      font-family: var(--font-mono); font-size: 12px; color: var(--muted);
+      cursor: pointer; letter-spacing: 1px;
+      margin-bottom: 20px; display: inline-flex; align-items: center; gap: 6px;
+      transition: color .2s;
+    }
+    .back-crumb:hover { color: var(--accent); }
+
+    /* ─── MODAL ─── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; animation: fadeIn .2s ease; }
+    .modal-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px; padding: 32px;
+      width: 90%; max-width: 440px;
+    }
+    .modal-title { font-family: var(--font-head); font-size: 22px; font-weight: 700; letter-spacing: 2px; margin-bottom: 20px; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+
+    /* ─── TOAST ─── */
+    .toast {
+      position: fixed; bottom: 28px; right: 28px; z-index: 300;
+      font-family: var(--font-mono); font-size: 12px; letter-spacing: 1px;
+      padding: 12px 20px; border-radius: 6px;
+      background: var(--panel); border: 1px solid var(--border);
+      color: var(--text);
+      transform: translateY(20px); opacity: 0;
+      transition: all .3s; pointer-events: none;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { border-color: var(--success); color: var(--success); }
+    .toast.error { border-color: var(--danger); color: var(--danger); }
+
+    /* ─── LOADING / EMPTY ─── */
+    .loading-state, .empty-state {
+      padding: 48px; text-align: center;
+      font-family: var(--font-mono); font-size: 13px; color: var(--muted);
+      letter-spacing: 1px;
+    }
+    .loading-state::after { content: '...'; animation: dots 1s infinite; }
+    @keyframes dots { 0%,20%{content:'.'} 40%{content:'..'} 60%,100%{content:'...'} }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 600px) {
+      nav { padding: 0 14px; }
+      .nav-logo { font-size: 18px; }
+      .card-detail-flex { flex-direction: column; }
+      .card-art-placeholder { margin: 0 0 20px; width: 100%; height: 160px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">PTCG<span>·</span>LOGGER</div>
+  <div id="navAuth" style="display:flex;gap:8px;align-items:center;">
+    <button class="nav-btn ghost" onclick="showView('auth')">Login / Register</button>
+  </div>
+  <div id="navViews" style="display:none;gap:8px;align-items:center;flex-wrap:wrap;">
+    <button class="nav-btn ghost" id="btnNavSets" onclick="showView('sets')">Sets</button>
+    <button class="nav-btn ghost" id="btnNavCollection" onclick="showView('collection')">My Collection</button>
+    <span id="userGreeting"></span>
+    <button class="nav-btn ghost" onclick="logout()" style="color:var(--danger);">Logout</button>
+  </div>
+</nav>
+
+<main>
+
+  <!-- ─── AUTH VIEW ─── -->
+  <div id="viewAuth" class="view">
+    <div class="auth-wrap">
+      <div class="nav-logo" style="font-size:24px;margin-bottom:20px;text-align:center;">PTCG<span>·</span>LOGGER</div>
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">Login</button>
+        <button class="auth-tab" id="tabRegister" onclick="switchAuthTab('register')">Register</button>
+      </div>
+      <!-- Login -->
+      <div id="formLogin">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="loginEmail" placeholder="you@example.com" />
+        </div>
+        <div class="form-group">
+          <label>Collector ID</label>
+          <input type="text" id="loginId" placeholder="Enter your collector ID" />
+        </div>
+        <button class="btn btn-primary btn-full" onclick="login()">Login</button>
+        <div class="msg" id="loginMsg"></div>
+      </div>
+      <!-- Register -->
+      <div id="formRegister" style="display:none;">
+        <div class="form-group">
+          <label>Name</label>
+          <input type="text" id="regName" placeholder="Your name" />
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="regEmail" placeholder="you@example.com" />
+        </div>
+        <div class="form-group">
+          <label>Country</label>
+          <input type="text" id="regCountry" placeholder="e.g. USA" />
+        </div>
+        <button class="btn btn-primary btn-full" onclick="register()">Create Account</button>
+        <div class="msg" id="regMsg"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SETS VIEW ─── -->
+  <div id="viewSets" class="view">
+    <div class="page-title">Card <span>Sets</span></div>
+    <div class="page-sub">// Browse all sets — click to view cards</div>
+    <div id="setsGrid" class="sets-grid"><div class="loading-state">Loading sets</div></div>
+  </div>
+
+  <!-- ─── SET DETAIL VIEW (card list) ─── -->
+  <div id="viewSetDetail" class="view">
+    <div class="back-crumb" onclick="showView('sets')">← Back to Sets</div>
+    <div class="page-title" id="setDetailTitle">Set Name</div>
+    <div class="page-sub" id="setDetailSub"></div>
+    <div class="controls-bar">
+      <input type="text" class="search-input" id="cardSearch" placeholder="Search cards..." oninput="filterCards()" />
+      <select class="sort-select" id="cardSort" onchange="filterCards()">
+        <option value="number">Sort: Card #</option>
+        <option value="name">Sort: Name</option>
+        <option value="rarity">Sort: Rarity</option>
+      </select>
+      <div class="rarity-toggle" id="rarityFilters"></div>
+    </div>
+    <div class="cards-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Rarity</th>
+            <th>In Collection</th>
+          </tr>
+        </thead>
+        <tbody id="cardsTableBody"><tr><td colspan="4" class="loading-state">Loading</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ─── CARD DETAIL VIEW ─── -->
+  <div id="viewCardDetail" class="view">
+    <div class="card-detail">
+      <div class="card-detail-back" id="cardDetailBack" onclick="goBackFromCard()">← Back</div>
+      <div class="card-detail-panel">
+        <div class="card-detail-header">
+          <div class="card-detail-number" id="cdNumber"></div>
+          <div class="card-detail-name" id="cdName"></div>
+          <div style="margin-top:10px;" id="cdRarityBadge"></div>
+        </div>
+        <div class="card-detail-body">
+          <div class="card-detail-flex">
+            <div class="card-art-placeholder">
+              <div class="card-art-inner">
+                <div id="cdArtIcon" style="font-size:42px;">🃏</div>
+                <div style="font-size:10px;font-family:var(--font-mono);letter-spacing:1px;margin-top:8px;color:var(--muted);">NO IMAGE</div>
+              </div>
+            </div>
+            <div class="card-detail-info">
+              <div class="detail-row">
+                <div class="detail-key">Set</div>
+                <div class="detail-val" id="cdSet">—</div>
+              </div>
+              <div class="detail-row">
+                <div class="detail-key">Generation</div>
+                <div class="detail-val" id="cdGen">—</div>
+              </div>
+              <div class="detail-row">
+                <div class="detail-key">Release</div>
+                <div class="detail-val" id="cdRelease">—</div>
+              </div>
+              <div class="detail-row">
+                <div class="detail-key">Rarity</div>
+                <div class="detail-val" id="cdRarity">—</div>
+              </div>
+              <div class="detail-row">
+                <div class="detail-key">Status</div>
+                <div class="detail-val" id="cdOwned">—</div>
+              </div>
+              <div id="collectedOnRow" class="detail-row" style="display:none;">
+                <div class="detail-key">Collected On</div>
+                <div class="detail-val" id="cdCollectedOn">—</div>
+              </div>
+            </div>
+          </div>
+          <div class="add-to-coll-btn-wrap" id="cdAddWrap" style="display:none;">
+            <button class="btn btn-outline" onclick="addToCollection()">+ Add to My Collection</button>
+          </div>
+          <div class="add-to-coll-btn-wrap" id="cdRemoveWrap" style="display:none;">
+            <button class="btn btn-danger" onclick="removeFromCollection()">− Remove from Collection</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── MY COLLECTION VIEW ─── -->
+  <div id="viewCollection" class="view">
+    <div class="page-title">My <span>Collection</span></div>
+    <div class="page-sub" id="collectionSub">// Loading...</div>
+    <div class="stats-row" id="collectionStats"></div>
+    <div class="controls-bar">
+      <input type="text" class="search-input" id="collSearch" placeholder="Search my cards..." oninput="filterCollection()" />
+      <select class="sort-select" id="collSort" onchange="filterCollection()">
+        <option value="date_desc">Sort: Newest First</option>
+        <option value="date_asc">Sort: Oldest First</option>
+        <option value="set">Sort: By Set</option>
+        <option value="name">Sort: Name</option>
+        <option value="rarity">Sort: Rarity</option>
+      </select>
+    </div>
+    <div class="cards-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Set</th>
+            <th>Rarity</th>
+            <th>Acquired</th>
+          </tr>
+        </thead>
+        <tbody id="collTableBody"><tr><td colspan="5" class="loading-state">Loading</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<!-- ─── ADD TO COLLECTION MODAL ─── -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal-box">
+    <div class="modal-title">Add to Collection</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px;" id="addModalCardName"></div>
+    <div class="form-group">
+      <label>Acquired Date</label>
+      <input type="text" id="acquiredDate" placeholder="YYYY-MM-DD" />
+    </div>
+    <div class="msg" id="addModalMsg"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="confirmAdd()">Confirm</button>
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── TOAST ─── -->
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'http://localhost:3000/api';
+
+// ─── State ───────────────────────────────────────────────────────────────────
+let currentUser = JSON.parse(localStorage.getItem('ptcg_user') || 'null');
+let allSets = [], allCards = [], allCollection = [], allCollectors = [];
+let currentSetId = null;
+let currentCardId = null;
+let cardDetailFrom = 'sets';
+let rarityFilters = new Set();
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+(async () => {
+  await loadData();
+  if (currentUser) {
+    applyLoggedInUI();
+    showView('sets');
+  } else {
+    showView('auth');
+  }
+})();
+
+async function loadData() {
+  try {
+    const [sets, cards, collection, collectors] = await Promise.all([
+      fetch(`${API}/sets`).then(r => r.json()).catch(() => []),
+      fetch(`${API}/cards`).then(r => r.json()).catch(() => []),
+      fetch(`${API}/collection`).then(r => r.json()).catch(() => []),
+      fetch(`${API}/collectors`).then(r => r.json()).catch(() => []),
+    ]);
+    allSets = Array.isArray(sets) ? sets : [];
+    allCards = Array.isArray(cards) ? cards : [];
+    allCollection = Array.isArray(collection) ? collection : [];
+    allCollectors = Array.isArray(collectors) ? collectors : [];
+  } catch (e) {
+    showToast('Could not reach server', 'error');
+  }
+}
+
+// ─── AUTH ─────────────────────────────────────────────────────────────────────
+function switchAuthTab(tab) {
+  document.getElementById('formLogin').style.display = tab === 'login' ? '' : 'none';
+  document.getElementById('formRegister').style.display = tab === 'register' ? '' : 'none';
+  document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+  document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
+}
+
+async function login() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const id    = parseInt(document.getElementById('loginId').value.trim());
+  const msg   = document.getElementById('loginMsg');
+  msg.className = 'msg';
+  if (!email || !id) { msg.textContent = 'Please fill in all fields.'; msg.classList.add('error'); return; }
+  await loadData();
+  const user = allCollectors.find(c => c.email === email && c.collector_id === id);
+  if (!user) { msg.textContent = 'No matching account found.'; msg.classList.add('error'); return; }
+  currentUser = user;
+  localStorage.setItem('ptcg_user', JSON.stringify(user));
+  applyLoggedInUI();
+  showView('sets');
+}
+
+async function register() {
+  const name    = document.getElementById('regName').value.trim();
+  const email   = document.getElementById('regEmail').value.trim();
+  const country = document.getElementById('regCountry').value.trim();
+  const msg     = document.getElementById('regMsg');
+  msg.className = 'msg';
+  if (!name || !email) { msg.textContent = 'Name and email are required.'; msg.classList.add('error'); return; }
+  await loadData();
+  if (allCollectors.find(c => c.email === email)) {
+    msg.textContent = 'Email already registered.'; msg.classList.add('error'); return;
+  }
+  // POST new collector (server must support this — show feedback either way)
+  try {
+    const res = await fetch(`${API}/collectors`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, country: country || null })
+    });
+    if (!res.ok) throw new Error();
+    const newUser = await res.json();
+    currentUser = newUser;
+    localStorage.setItem('ptcg_user', JSON.stringify(newUser));
+    applyLoggedInUI();
+    showView('sets');
+  } catch {
+    // If server doesn't have POST /collectors yet, simulate locally for demo
+    const fakeUser = { collector_id: Date.now(), name, email, country: country || '—' };
+    allCollectors.push(fakeUser);
+    currentUser = fakeUser;
+    localStorage.setItem('ptcg_user', JSON.stringify(fakeUser));
+    applyLoggedInUI();
+    msg.textContent = `Account created`;
+    msg.classList.add('success');
+    setTimeout(() => showView('sets'), 2000);
+  }
+}
+
+function logout() {
+  currentUser = null;
+  localStorage.removeItem('ptcg_user');
+  document.getElementById('navAuth').style.display = 'flex';
+  document.getElementById('navViews').style.display = 'none';
+  showView('auth');
+}
+
+function applyLoggedInUI() {
+  document.getElementById('navAuth').style.display = 'none';
+  document.getElementById('navViews').style.display = 'flex';
+  document.getElementById('userGreeting').textContent = `▶ ${currentUser.name}`;
+}
+
+// ─── VIEWS ────────────────────────────────────────────────────────────────────
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-view'));
+  document.getElementById(`view${cap(name)}`).classList.add('active');
+  const btn = document.getElementById(`btnNav${cap(name)}`);
+  if (btn) btn.classList.add('active-view');
+  if (name === 'sets')       renderSets();
+  if (name === 'collection') renderCollection();
+}
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+// ─── SETS VIEW ────────────────────────────────────────────────────────────────
+function renderSets() {
+  const grid = document.getElementById('setsGrid');
+  if (!allSets.length) { grid.innerHTML = '<div class="empty-state">No sets found.</div>'; return; }
+  grid.innerHTML = allSets.map(s => {
+    const owned = currentUser ? allCollection.filter(c => {
+      const card = allCards.find(k => k.card_id === c.card_id);
+      return c.collector_id === currentUser.collector_id && card && card.set_id === s.set_id;
+    }).length : 0;
+    const pct = s.num_cards ? Math.round(owned / s.num_cards * 100) : 0;
+    return `
+      <div class="set-card" onclick="openSet(${s.set_id})">
+        <div class="set-code">${s.set_code || '—'}</div>
+        <div class="set-name">${s.set_name}</div>
+        <div class="set-gen-badge">${s.set_generation || '—'}</div>
+        <div class="set-meta">
+          <span>📅 ${fmtDate(s.release_date)}</span>
+          <span>🃏 ${s.num_cards} cards</span>
+        </div>
+        ${currentUser ? `<div style="margin-top:12px;">
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:4px;">${owned}/${s.num_cards} COLLECTED · ${pct}%</div>
+          <div style="height:3px;background:var(--border);border-radius:2px;">
+            <div style="height:3px;width:${pct}%;background:var(--accent);border-radius:2px;transition:width .5s;"></div>
+          </div>
+        </div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+function openSet(setId) {
+  currentSetId = setId;
+  rarityFilters = new Set();
+  const set = allSets.find(s => s.set_id === setId);
+  document.getElementById('setDetailTitle').innerHTML = set ? `${set.set_name} <span style="font-size:18px;color:var(--muted);">${set.set_code}</span>` : 'Set';
+  document.getElementById('setDetailSub').textContent = set ? `// ${set.set_generation} · ${fmtDate(set.release_date)} · ${set.num_cards} cards` : '';
+  // Build rarity filter pills
+  const cards = allCards.filter(c => c.set_id === setId);
+  const rarities = [...new Set(cards.map(c => c.rarity))].filter(Boolean);
+  const rfEl = document.getElementById('rarityFilters');
+  rfEl.innerHTML = rarities.map(r => `<button class="rarity-pill" data-r="${r}" onclick="toggleRarity('${r}')">${r}</button>`).join('');
+  document.getElementById('cardSearch').value = '';
+  document.getElementById('cardSort').value = 'number';
+  renderSetCards();
+  showView('setDetail');
+}
+
+function toggleRarity(r) {
+  rarityFilters.has(r) ? rarityFilters.delete(r) : rarityFilters.add(r);
+  document.querySelectorAll('.rarity-pill').forEach(p => {
+    p.classList.toggle('active-rarity', rarityFilters.has(p.dataset.r));
+  });
+  filterCards();
+}
+
+function filterCards() { renderSetCards(); }
+
+function renderSetCards() {
+  const search = document.getElementById('cardSearch').value.toLowerCase();
+  const sort   = document.getElementById('cardSort').value;
+  let cards = allCards.filter(c => c.set_id === currentSetId);
+  if (search) cards = cards.filter(c => c.card_name.toLowerCase().includes(search) || c.card_number.includes(search));
+  if (rarityFilters.size) cards = cards.filter(c => rarityFilters.has(c.rarity));
+  const rarityOrder = { UR: 0, SAR: 1, SR: 2, CSR: 3 };
+  cards.sort((a, b) => {
+    if (sort === 'name') return a.card_name.localeCompare(b.card_name);
+    if (sort === 'rarity') return (rarityOrder[a.rarity] ?? 9) - (rarityOrder[b.rarity] ?? 9);
+    // default: card number
+    const an = parseFloat(a.card_number), bn = parseFloat(b.card_number);
+    return isNaN(an) || isNaN(bn) ? a.card_number.localeCompare(b.card_number) : an - bn;
+  });
+  const myIds = currentUser ? new Set(allCollection.filter(c => c.collector_id === currentUser.collector_id).map(c => c.card_id)) : new Set();
+  const tbody = document.getElementById('cardsTableBody');
+  if (!cards.length) { tbody.innerHTML = '<tr><td colspan="4" class="empty-state">No cards found.</td></tr>'; return; }
+  tbody.innerHTML = cards.map(c => {
+    const rc = rarityClass(c.rarity);
+    const owned = myIds.has(c.card_id);
+    return `<tr class="card-row" onclick="openCard(${c.card_id}, 'setDetail')">
+      <td style="font-family:var(--font-mono);font-size:12px;color:var(--muted);">${c.card_number}</td>
+      <td class="${rc}">${c.card_name}</td>
+      <td><span class="rarity-badge ${c.rarity || 'default'}">${c.rarity || '—'}</span></td>
+      <td>${currentUser ? (owned ? '<span style="color:var(--success);font-size:18px;">✓</span>' : '<span style="color:var(--border);">—</span>') : '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── CARD DETAIL ──────────────────────────────────────────────────────────────
+function openCard(cardId, from) {
+  currentCardId = cardId;
+  cardDetailFrom = from || 'sets';
+  const card = allCards.find(c => c.card_id === cardId);
+  const set  = card ? allSets.find(s => s.set_id === card.set_id) : null;
+  const myEntry = currentUser ? allCollection.find(c => c.collector_id === currentUser.collector_id && c.card_id === cardId) : null;
+  const owned = !!myEntry;
+  document.getElementById('cdNumber').textContent = card ? `#${card.card_number}` : '';
+  document.getElementById('cdName').textContent = card ? card.card_name : '?';
+  document.getElementById('cdRarityBadge').innerHTML = card ? `<span class="rarity-badge ${card.rarity || 'default'}">${card.rarity || '?'}</span>` : '';
+  document.getElementById('cdSet').textContent = set ? `${set.set_name} (${set.set_code})` : '—';
+  document.getElementById('cdGen').textContent = set ? set.set_generation : '—';
+  document.getElementById('cdRelease').textContent = set ? fmtDate(set.release_date) : '—';
+  document.getElementById('cdRarity').innerHTML = card ? `<span class="${rarityClass(card.rarity)}">${card.rarity || '—'}</span>` : '—';
+  document.getElementById('cdArtIcon').textContent = rarityIcon(card?.rarity);
+  // Owned badge
+  const ownedEl = document.getElementById('cdOwned');
+  if (!currentUser) {
+    ownedEl.innerHTML = '<span style="color:var(--muted);font-size:12px;">Login to track</span>';
+    document.getElementById('cdAddWrap').style.display = 'none';
+    document.getElementById('cdRemoveWrap').style.display = 'none';
+    document.getElementById('collectedOnRow').style.display = 'none';
+  } else if (owned) {
+    ownedEl.innerHTML = '<span class="owned-badge">✓ In Collection</span>';
+    document.getElementById('collectedOnRow').style.display = 'flex';
+    document.getElementById('cdCollectedOn').textContent = fmtDate(myEntry.acquired_date);
+    document.getElementById('cdAddWrap').style.display = 'none';
+    document.getElementById('cdRemoveWrap').style.display = '';
+  } else {
+    ownedEl.innerHTML = '<span class="not-owned-badge">✗ Not Collected</span>';
+    document.getElementById('collectedOnRow').style.display = 'none';
+    document.getElementById('cdAddWrap').style.display = '';
+    document.getElementById('cdRemoveWrap').style.display = 'none';
+  }
+  showView('cardDetail');
+}
+
+function goBackFromCard() {
+  showView(cardDetailFrom === 'collection' ? 'collection' : 'setDetail');
+}
+
+// ─── COLLECTION VIEW ──────────────────────────────────────────────────────────
+function renderCollection() {
+  if (!currentUser) { showView('auth'); return; }
+  const myEntries = allCollection.filter(c => c.collector_id === currentUser.collector_id);
+  document.getElementById('collectionSub').textContent = `// ${currentUser.name}'s collection — ${myEntries.length} card${myEntries.length !== 1 ? 's' : ''}`;
+  // Stats
+  const rarityCount = {};
+  myEntries.forEach(e => {
+    const card = allCards.find(c => c.card_id === e.card_id);
+    const r = card?.rarity || 'Other';
+    rarityCount[r] = (rarityCount[r] || 0) + 1;
+  });
+  const statsEl = document.getElementById('collectionStats');
+  const setsRep = new Set(myEntries.map(e => { const c = allCards.find(k => k.card_id === e.card_id); return c?.set_id; })).size;
+  statsEl.innerHTML = `
+    <div class="stat-box"><div class="stat-label">Total Cards</div><div class="stat-val">${myEntries.length}</div></div>
+    <div class="stat-box"><div class="stat-label">Sets Represented</div><div class="stat-val">${setsRep}</div></div>
+    ${Object.entries(rarityCount).map(([r, n]) => `<div class="stat-box"><div class="stat-label">${r}</div><div class="stat-val ${rarityClass(r)}">${n}</div></div>`).join('')}
+  `;
+  document.getElementById('collSearch').value = '';
+  filterCollection();
+}
+
+function filterCollection() {
+  if (!currentUser) return;
+  const search = document.getElementById('collSearch').value.toLowerCase();
+  const sort   = document.getElementById('collSort').value;
+  let entries = allCollection.filter(c => c.collector_id === currentUser.collector_id);
+  // Enrich
+  let rows = entries.map(e => {
+    const card = allCards.find(c => c.card_id === e.card_id);
+    const set  = card ? allSets.find(s => s.set_id === card.set_id) : null;
+    return { ...e, card, set };
+  }).filter(r => r.card);
+  if (search) rows = rows.filter(r => r.card.card_name.toLowerCase().includes(search) || r.set?.set_name.toLowerCase().includes(search));
+  const rarityOrder = { UR: 0, SAR: 1, SR: 2, CSR: 3 };
+  rows.sort((a, b) => {
+    if (sort === 'name') return a.card.card_name.localeCompare(b.card.card_name);
+    if (sort === 'set') return (a.card.set_id - b.card.set_id);
+    if (sort === 'rarity') return (rarityOrder[a.card.rarity] ?? 9) - (rarityOrder[b.card.rarity] ?? 9);
+    if (sort === 'date_asc') return new Date(a.acquired_date) - new Date(b.acquired_date);
+    return new Date(b.acquired_date) - new Date(a.acquired_date); // date_desc
+  });
+  const tbody = document.getElementById('collTableBody');
+  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No cards yet.</td></tr>'; return; }
+  tbody.innerHTML = rows.map(r => {
+    const rc = rarityClass(r.card.rarity);
+    return `<tr class="card-row" onclick="openCard(${r.card.card_id}, 'collection')">
+      <td style="font-family:var(--font-mono);font-size:12px;color:var(--muted);">${r.card.card_number}</td>
+      <td class="${rc}">${r.card.card_name}</td>
+      <td style="font-size:12px;color:var(--muted);">${r.set?.set_name || '—'}</td>
+      <td><span class="rarity-badge ${r.card.rarity || 'default'}">${r.card.rarity || '—'}</span></td>
+      <td style="font-family:var(--font-mono);font-size:12px;color:var(--muted);">${fmtDate(r.acquired_date)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── ADD / REMOVE ─────────────────────────────────────────────────────────────
+function addToCollection() {
+  const card = allCards.find(c => c.card_id === currentCardId);
+  document.getElementById('addModalCardName').textContent = card ? `${card.card_name} · ${card.card_number}` : '';
+  document.getElementById('acquiredDate').value = today();
+  document.getElementById('addModalMsg').textContent = '';
+  document.getElementById('addModal').classList.add('open');
+}
+function closeModal() { document.getElementById('addModal').classList.remove('open'); }
+
+async function confirmAdd() {
+  const dateVal = document.getElementById('acquiredDate').value.trim();
+  const msgEl = document.getElementById('addModalMsg');
+  if (!dateVal.match(/^\d{4}-\d{2}-\d{2}$/)) { msgEl.textContent = 'Use YYYY-MM-DD format.'; msgEl.className = 'msg error'; return; }
+  try {
+    const res = await fetch(`${API}/collection`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ collector_id: currentUser.collector_id, card_id: currentCardId, acquired_date: dateVal })
+    });
+    if (!res.ok) throw new Error();
+    const newEntry = await res.json();
+    allCollection.push(newEntry);
+  } catch {
+    // Simulate locally if API not yet wired
+    allCollection.push({ collection_id: Date.now(), collector_id: currentUser.collector_id, card_id: currentCardId, acquired_date: dateVal });
+  }
+  closeModal();
+  showToast('Added to collection!', 'success');
+  openCard(currentCardId, cardDetailFrom);
+}
+
+async function removeFromCollection() {
+  const entry = allCollection.find(c => c.collector_id === currentUser.collector_id && c.card_id === currentCardId);
+  if (!entry) return;
+  try {
+    await fetch(`${API}/collection/${entry.collection_id}`, { method: 'DELETE' });
+  } catch {}
+  allCollection = allCollection.filter(c => c.collection_id !== entry.collection_id);
+  showToast('Removed from collection.', 'success');
+  openCard(currentCardId, cardDetailFrom);
+}
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+function rarityClass(r) {
+  if (r === 'UR') return 'rarity-UR';
+  if (r === 'SR') return 'rarity-SR';
+  if (r === 'SAR') return 'rarity-SAR';
+  if (r === 'CSR') return 'rarity-CSR';
+  return 'rarity-other';
+}
+function rarityIcon(r) {
+  if (r === 'UR') return '✨';
+  if (r === 'SR' || r === 'SAR') return '⭐';
+  if (r === 'CSR') return '🔶';
+  return '🃏';
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  try { return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }); } catch { return d; }
+}
+function today() { return new Date().toISOString().slice(0, 10); }
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.className = 'toast', 2800);
+}
+</script>
+</body>
+</html>
