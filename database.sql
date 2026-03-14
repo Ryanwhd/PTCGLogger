@@ -26,7 +26,6 @@ SET default_table_access_method = heap;
 --
 -- Name: cards; Type: TABLE; Schema: public; Owner: postgres
 --
-8
 CREATE TABLE public.cards (
     card_id integer NOT NULL,
     card_name character varying(100) NOT NULL,
